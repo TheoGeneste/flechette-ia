@@ -16,19 +16,27 @@ const authService = {
         }
     },
 
-    async login(email, password) {
+    async login({ email, password }) {
         try {
             const response = await axios.post(`${API_URL}/users/login`, {
                 email,
                 password
             });
-            return response.data;
+            const { token, user } = response.data;
+
+            // Stocker le token et l'utilisateur dans le localStorage
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+
+            return user;
         } catch (error) {
             throw error.response?.data?.message || 'Erreur lors de la connexion';
         }
     },
 
     logout() {
+        // Supprimer les données de l'utilisateur et du token du localStorage
+        localStorage.removeItem('token');
         localStorage.removeItem('user');
     },
 
@@ -43,4 +51,4 @@ const authService = {
     }
 };
 
-export default authService; 
+export default authService;

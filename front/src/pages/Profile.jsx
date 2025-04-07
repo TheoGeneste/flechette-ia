@@ -31,19 +31,38 @@ const Profile = () => {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const [profileData, statsData] = await Promise.all([
-                    userService.getProfile(),
-                    statsService.getUserStats(user.id)
-                ]);
+                // Récupérer les données du profil
+                const profileData = await userService.getProfile();
                 setProfile(profileData);
-                setStats(statsData);
+
+                // Récupérer les statistiques de l'utilisateur
+                try {
+                    const statsData = await statsService.getUserStats(user.id);
+                    setStats(statsData || {
+                        games_played: 0,
+                        wins: 0,
+                        average_score: 0,
+                        highest_score: 0
+                    });
+                } catch (statsError) {
+                    // Si une erreur survient pour les statistiques, définir des valeurs par défaut
+                    console.error('Erreur lors de la récupération des statistiques:', statsError);
+                    setStats({
+                        games_played: 0,
+                        wins: 0,
+                        average_score: 0,
+                        highest_score: 0
+                    });
+                }
+
+                // Mettre à jour les données du formulaire
                 setFormData({
                     username: profileData.username,
                     email: profileData.email,
                     avatar_url: profileData.avatar_url || ''
                 });
-            } catch (err) {
-                setError(err.message || 'Erreur lors du chargement du profil');
+            } catch (profileError) {
+                setError(profileError.message || 'Erreur lors du chargement du profil');
             } finally {
                 setLoading(false);
             }
@@ -80,7 +99,13 @@ const Profile = () => {
     }
 
     return (
-        <Container maxWidth="lg">
+        <Container 
+            maxWidth={false} // Permet au conteneur de prendre toute la largeur
+            sx={{
+                px: { xs: 2, sm: 4, md: 8 }, // Ajoute des marges internes pour éviter que le contenu touche les bords
+                width: '100%', // Assure que le conteneur occupe toute la largeur
+            }}
+        >
             <Box sx={{ my: 4 }}>
                 {error && (
                     <Alert severity="error" sx={{ mb: 2 }}>
@@ -190,4 +215,4 @@ const Profile = () => {
     );
 };
 
-export default Profile; 
+export default Profile;

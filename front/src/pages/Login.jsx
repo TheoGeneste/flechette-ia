@@ -1,10 +1,10 @@
-import React, { useState, useRef } from 'react';
-import { 
-    Container, 
-    Box, 
-    Typography, 
-    TextField, 
-    Button, 
+import React, { useState } from 'react';
+import {
+    Container,
+    Box,
+    Typography,
+    TextField,
+    Button,
     Paper,
     styled,
     Link
@@ -57,37 +57,35 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { login } = useAuth();
-    const isSubmitting = useRef(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        // Empêche la double soumission
-        if (isSubmitting.current) return;
-        isSubmitting.current = true;
-        
+
         setError('');
         setLoading(true);
 
         try {
-            const response = await authService.login(email, password);
-            login(response.token);
-            navigate('/profile');
+            // Appel à la fonction login avec un objet contenant email et password
+            const user = await login({ email, password });
+
+            // Attendre que l'utilisateur soit défini avant de rediriger
+            if (user) {
+                navigate('/profile');
+            }
         } catch (err) {
             setError(err.response?.data?.message || 'Une erreur est survenue');
         } finally {
             setLoading(false);
-            isSubmitting.current = false;
         }
     };
-
+    
     return (
         <LoginContainer>
             <LoginPaper elevation={3}>
                 <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
                     Connexion
                 </Typography>
-                
+
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
                     Connectez-vous pour accéder à votre compte
                 </Typography>
@@ -104,7 +102,7 @@ const Login = () => {
                         variant="outlined"
                         disabled={loading}
                     />
-                    
+
                     <StyledTextField
                         label="Mot de passe"
                         type="password"
@@ -136,9 +134,9 @@ const Login = () => {
                 <Box sx={{ mt: 2, textAlign: 'center' }}>
                     <Typography variant="body2">
                         Pas encore de compte ?{' '}
-                        <Link 
-                            href="/register" 
-                            sx={{ 
+                        <Link
+                            href="/register"
+                            sx={{
                                 color: 'primary.main',
                                 textDecoration: 'none',
                                 '&:hover': {
@@ -155,4 +153,4 @@ const Login = () => {
     );
 };
 
-export default Login; 
+export default Login;

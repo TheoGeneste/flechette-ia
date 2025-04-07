@@ -9,6 +9,7 @@ import Profile from './pages/Profile';
 import Games from './pages/Games';
 import Friends from './pages/Friends';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import './App.css';
 
 const theme = createTheme({
     palette: {
