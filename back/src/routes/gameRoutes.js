@@ -33,6 +33,7 @@ const authMiddleware = require('../middleware/authMiddleware');
  *         description: Données invalides
  */
 router.post('/', authMiddleware, gameController.createGame);
+router.get('/games', authMiddleware, gameController.getGameList);
 
 /**
  * @swagger
@@ -277,4 +278,5 @@ router.post('/:id/invite', authMiddleware, gameController.invitePlayer);
  */
 router.get('/:id/stats', authMiddleware, gameController.getGameStats);
 
-module.exports = router; 
+
+module.exports = router;

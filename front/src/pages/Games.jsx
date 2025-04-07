@@ -16,7 +16,10 @@ import {
     FormControl,
     InputLabel,
     Alert,
-    CircularProgress
+    CircularProgress,
+    RadioGroup,
+    FormControlLabel,
+    Radio
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import gameService from '../services/gameService';
@@ -32,37 +35,44 @@ const Games = () => {
     const [newGame, setNewGame] = useState({
         mode_id: '',
         max_players: 2,
-        is_private: false
+        is_private: false,
+        is_local: false // Nouveau champ pour indiquer si la partie est en local
     });
+    const [selectedStatus, setSelectedStatus] = useState('waiting'); // Par défaut, 'waiting'
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [activeGames, modes] = await Promise.all([
-                    gameService.getActiveGames(),
-                    gameModeService.getAllGameModes()
-                ]);
-                setGames(activeGames);
+                const modes = await gameModeService.getAllGameModes();
                 setGameModes(modes);
+
+                const activeGames = await gameService.getActiveGames(selectedStatus); // Inclure le statut
+                setGames(activeGames);
             } catch (err) {
-                setError(err.message || 'Erreur lors du chargement des parties');
+                setError(err.message || 'Erreur lors du chargement des données');
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, []);
+    }, [selectedStatus]); // Recharger les données lorsque le statut change
 
     const handleCreateGame = async () => {
         try {
-            const createdGame = await gameService.createGame(newGame);
+            const createdGame = await gameService.createGame({
+                game_mode_id: newGame.mode_id,
+                max_players: newGame.max_players,
+                is_private: newGame.is_private,
+                is_local: newGame.is_local
+            });
             setGames(prev => [...prev, createdGame]);
             setOpenCreateDialog(false);
             setNewGame({
                 mode_id: '',
                 max_players: 2,
-                is_private: false
+                is_private: false,
+                is_local: false
             });
         } catch (err) {
             setError(err.message || 'Erreur lors de la création de la partie');
@@ -101,6 +111,19 @@ const Games = () => {
                     <Typography variant="h4" component="h1">
                         Parties en cours
                     </Typography>
+                    <FormControl sx={{ minWidth: 200 }}>
+                        <InputLabel>Statut</InputLabel>
+                        <Select
+                            value={selectedStatus}
+                            onChange={(e) => setSelectedStatus(e.target.value)}
+                            label="Statut"
+                        >
+                            <MenuItem value="waiting">En attente</MenuItem>
+                            <MenuItem value="in_progress">En cours</MenuItem>
+                            <MenuItem value="completed">Terminée</MenuItem>
+                            <MenuItem value="cancelled">Annulée</MenuItem>
+                        </Select>
+                    </FormControl>
                     <Button
                         variant="contained"
                         color="primary"
@@ -118,15 +141,15 @@ const Games = () => {
                                     Partie #{game.id}
                                 </Typography>
                                 <Typography variant="body1" paragraph>
-                                    Mode: {gameModes.find(mode => mode.id === game.mode_id)?.name || 'Inconnu'}
+                                    Mode: {gameModes.find(mode => mode.id === game.game_mode_id)?.name || 'Inconnu'}
                                 </Typography>
                                 <Typography variant="body1" paragraph>
-                                    Joueurs: {game.players.length}/{game.max_players}
+                                    Joueurs: {game.players?.length || 0}/{game.max_players}
                                 </Typography>
                                 <Typography variant="body1" paragraph>
                                     Statut: {game.status}
                                 </Typography>
-                                {!game.players.some(p => p.id === user.id) && (
+                                {game.players && !game.players.some(p => p.id === user.id) && (
                                     <Button
                                         variant="contained"
                                         color="primary"
@@ -166,6 +189,16 @@ const Games = () => {
                             onChange={(e) => setNewGame(prev => ({ ...prev, max_players: parseInt(e.target.value) }))}
                             sx={{ mt: 2 }}
                         />
+                        <FormControl component="fieldset" sx={{ mt: 2 }}>
+                            <Typography variant="body1">Type de partie</Typography>
+                            <RadioGroup
+                                value={newGame.is_local ? 'local' : 'online'}
+                                onChange={(e) => setNewGame(prev => ({ ...prev, is_local: e.target.value === 'local' }))}
+                            >
+                                <FormControlLabel value="local" control={<Radio />} label="Local" />
+                                <FormControlLabel value="online" control={<Radio />} label="En ligne" />
+                            </RadioGroup>
+                        </FormControl>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={() => setOpenCreateDialog(false)}>Annuler</Button>
@@ -179,4 +212,4 @@ const Games = () => {
     );
 };
 
-export default Games; 
+export default Games;

@@ -12,10 +12,11 @@ const gameController = {
 
     async getGameList(req, res) {
         try {
-            const games = await gameService.getGameList(req.user.id);
-            res.json(games);
+            const { status } = req.query; // Récupérer le statut depuis les paramètres de requête
+            const games = await gameService.getGameList(status);
+            res.status(200).json(games);
         } catch (error) {
-            res.status(400).json({ message: error.message });
+            res.status(500).json({ message: 'Erreur lors de la récupération des parties' });
         }
     },
 
@@ -104,4 +105,4 @@ const gameController = {
     }
 };
 
-module.exports = gameController; 
+module.exports = gameController;

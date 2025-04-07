@@ -2,12 +2,12 @@ const pool = require('../config/database');
 
 const gameService = {
     async createGame(userId, gameData) {
-        const { gameModeId, maxPlayers } = gameData;
-
+        const { game_mode_id, max_players } = gameData;
+        
         // Vérification du mode de jeu
         const [gameModes] = await pool.execute(
             'SELECT * FROM game_modes WHERE id = ? AND is_active = true',
-            [gameModeId]
+            [game_mode_id]
         );
 
         if (gameModes.length === 0) {
@@ -17,7 +17,7 @@ const gameService = {
         // Création de la partie
         const [result] = await pool.execute(
             'INSERT INTO games (game_mode_id, created_by, max_players) VALUES (?, ?, ?)',
-            [gameModeId, userId, maxPlayers]
+            [game_mode_id, userId, max_players]
         );
 
         // Ajout du créateur comme joueur
@@ -29,15 +29,15 @@ const gameService = {
         return this.getGameDetails(result.insertId);
     },
 
-    async getGameList(userId) {
+    async getGameList(status) {
         const [games] = await pool.execute(`
             SELECT g.*, gm.name as game_mode_name, 
                    (SELECT COUNT(*) FROM game_players WHERE game_id = g.id) as player_count
             FROM games g
             JOIN game_modes gm ON g.game_mode_id = gm.id
-            WHERE g.status = 'waiting'
+            WHERE g.status = ?
             ORDER BY g.created_at DESC
-        `);
+        `, [status]);
         return games;
     },
 
@@ -327,4 +327,4 @@ const gameService = {
     }
 };
 
-module.exports = gameService; 
+module.exports = gameService;

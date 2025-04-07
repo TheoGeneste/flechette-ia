@@ -6,9 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const gameService = {
     async createGame(gameModeId) {
         try {
-            const response = await axios.post(`${API_URL}/games`, {
-                game_mode_id: gameModeId
-            }, {
+            const response = await axios.post(`${API_URL}/games`, gameModeId, {
                 headers: authService.getAuthHeader()
             });
             return response.data;
@@ -50,14 +48,15 @@ const gameService = {
         }
     },
 
-    async getActiveGames() {
+    async getActiveGames(status) {
         try {
-            const response = await axios.get(`${API_URL}/games/active`, {
+            const response = await axios.get(`${API_URL}/games/games`, {
+                params: { status }, // Passer le statut comme paramètre de requête
                 headers: authService.getAuthHeader()
             });
             return response.data;
         } catch (error) {
-            throw error.response.data;
+            throw error.response?.data || 'Erreur lors de la récupération des parties';
         }
     },
 
@@ -84,4 +83,4 @@ const gameService = {
     }
 };
 
-export default gameService; 
+export default gameService;
